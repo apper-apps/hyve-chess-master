@@ -18,13 +18,26 @@
   .chess-square {
     @apply relative w-square-xs h-square-xs xs:w-square-sm xs:h-square-sm sm:w-square-md sm:h-square-md lg:w-square-lg lg:h-square-lg flex items-center justify-center transition-all duration-200 touch-manipulation;
   }
-  
-  .chess-square.light {
-    @apply bg-chess-light bg-wood-grain;
+.chess-square.light {
+    @apply bg-chess-light;
+    background-image: 
+      linear-gradient(45deg, rgba(139, 69, 19, 0.03) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(139, 69, 19, 0.03) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(139, 69, 19, 0.03) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(139, 69, 19, 0.03) 75%);
+    background-size: 4px 4px;
+    background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
   }
   
   .chess-square.dark {
-    @apply bg-chess-dark bg-wood-grain;
+    @apply bg-chess-dark;
+    background-image: 
+      linear-gradient(45deg, rgba(101, 67, 33, 0.05) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(101, 67, 33, 0.05) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(101, 67, 33, 0.05) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(101, 67, 33, 0.05) 75%);
+    background-size: 4px 4px;
+    background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
   }
   
   .chess-square.highlighted {
