@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { toast } from 'react-toastify';
-import ChessBoard from '@/components/organisms/ChessBoard';
-import GameStatus from '@/components/organisms/GameStatus';
-import CapturedPieces from '@/components/organisms/CapturedPieces';
-import GameControls from '@/components/organisms/GameControls';
-import PiecePromotionModal from '@/components/molecules/PiecePromotionModal';
-import ChessService from '@/services/api/ChessService';
-import Loading from '@/components/ui/Loading';
-import { ApperIcon } from '@/components/ApperIcon';
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import ChessBoard from "@/components/organisms/ChessBoard";
+import GameControls from "@/components/organisms/GameControls";
+import GameStatus from "@/components/organisms/GameStatus";
+import CapturedPieces from "@/components/organisms/CapturedPieces";
+import PiecePromotionModal from "@/components/molecules/PiecePromotionModal";
+import Loading from "@/components/ui/Loading";
+import ChessService from "@/services/api/ChessService";
 
-const ChessGame = () => {
+export default function ChessGame() {
   const [gameState, setGameState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [computerThinking, setComputerThinking] = useState(false);
@@ -416,5 +416,3 @@ return (
     </div>
   );
 };
-
-export default ChessGame;
