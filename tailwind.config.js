@@ -49,9 +49,8 @@ export default {
       backgroundImage: {
         'wood-grain': 'linear-gradient(45deg, rgba(139, 69, 19, 0.03) 25%, transparent 25%), linear-gradient(-45deg, rgba(139, 69, 19, 0.03) 25%, transparent 25%)',
         'wood-grain-light': 'linear-gradient(45deg, rgba(139, 69, 19, 0.03) 25%, transparent 25%), linear-gradient(-45deg, rgba(139, 69, 19, 0.03) 25%, transparent 25%)',
-        'wood-grain-dark': 'linear-gradient(45deg, rgba(101, 67, 33, 0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(101, 67, 33, 0.05) 25%, transparent 25%)',
+'wood-grain-dark': 'linear-gradient(45deg, rgba(101, 67, 33, 0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(101, 67, 33, 0.05) 25%, transparent 25%)',
       },
-},
       animation: {
         'bounce-subtle': 'bounce-subtle 0.6s ease-in-out',
         'shake': 'shake 0.5s ease-in-out',
