@@ -7,6 +7,12 @@ const ChessBoard = ({
   selectedSquare, 
   validMoves, 
   onSquareClick, 
+  onDragStart,
+  onDragEnd,
+  onDrop,
+  draggedPiece,
+  draggedFrom,
+  dragActive,
   playerColor,
   disabled = false 
 }) => {
@@ -25,19 +31,20 @@ const ChessBoard = ({
     return piece && piece.type === 'king' && piece.color === gameState.currentTurn && gameState.isInCheck;
   };
 
-  return (
+return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="relative"
+      className={`relative ${dragActive ? 'drag-active' : ''}`}
     >
       {/* Board */}
-      <div className="bg-chess-dark p-4 rounded-lg shadow-2xl">
-        <div className="grid grid-cols-8 gap-0 w-96 h-96 sm:w-[480px] sm:h-[480px] border-2 border-chess-dark rounded-md overflow-hidden">
+      <div className="bg-chess-dark p-2 xs:p-3 sm:p-4 rounded-lg shadow-2xl">
+        <div className="board-container grid grid-cols-8 gap-0 border-2 border-chess-dark rounded-md overflow-hidden">
           {displayRanks.map((rank) =>
             displayFiles.map((file) => {
               const square = `${file}${rank}`;
               const isLight = (files.indexOf(file) + parseInt(rank)) % 2 === 1;
+              const isDraggedFrom = draggedFrom === square;
               
               return (
                 <ChessSquare
@@ -48,7 +55,12 @@ const ChessBoard = ({
                   isSelected={isSelected(square)}
                   isValidMove={isValidMove(square)}
                   isInCheck={isInCheck(square)}
+                  isDraggedFrom={isDraggedFrom}
+                  dragActive={dragActive}
                   onClick={() => !disabled && onSquareClick(square)}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                  onDrop={onDrop}
                   disabled={disabled}
                 />
               );
@@ -58,9 +70,9 @@ const ChessBoard = ({
         
         {/* File labels (a-h) */}
         <div className="flex justify-center mt-2">
-          <div className="grid grid-cols-8 w-96 sm:w-[480px]">
+          <div className="board-container grid grid-cols-8">
             {displayFiles.map((file) => (
-              <div key={file} className="text-center text-chess-surface font-semibold text-sm">
+              <div key={file} className="text-center text-chess-surface font-semibold text-xs xs:text-sm">
                 {file}
               </div>
             ))}
@@ -69,10 +81,10 @@ const ChessBoard = ({
       </div>
       
       {/* Rank labels (1-8) */}
-      <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-center">
-        <div className="grid grid-rows-8 h-96 sm:h-[480px] mr-2">
+      <div className="absolute left-0 top-2 xs:top-3 sm:top-4 bottom-2 xs:bottom-3 sm:bottom-4 flex flex-col justify-center">
+        <div className="board-container grid grid-rows-8 mr-1 xs:mr-2">
           {displayRanks.map((rank) => (
-            <div key={rank} className="flex items-center justify-center text-chess-dark font-semibold text-sm">
+            <div key={rank} className="flex items-center justify-center text-chess-dark font-semibold text-xs xs:text-sm">
               {rank}
             </div>
           ))}
@@ -84,11 +96,42 @@ const ChessBoard = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 bg-black bg-opacity-20 rounded-lg flex items-center justify-center"
+          className="absolute inset-0 bg-black bg-opacity-20 rounded-lg flex items-center justify-center backdrop-blur-xs"
         >
-          <div className="bg-chess-surface px-4 py-2 rounded-lg shadow-lg">
-            <span className="text-chess-dark font-semibold">Computer is thinking...</span>
+          <div className="bg-chess-surface px-3 xs:px-4 py-2 rounded-lg shadow-lg">
+            <span className="text-chess-dark font-semibold text-sm xs:text-base">Computer is thinking...</span>
           </div>
+        </motion.div>
+      )}
+
+      {/* Drag Preview */}
+      {draggedPiece && (
+        <motion.div
+          className="absolute pointer-events-none z-50"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1.2 }}
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            fontSize: '3rem',
+            textShadow: '0 4px 8px rgba(0,0,0,0.5)',
+            filter: 'drop-shadow(0 0 8px rgba(255,215,0,0.8))'
+          }}
+        >
+          {draggedPiece.type === 'king' && draggedPiece.color === 'white' ? '♔' :
+           draggedPiece.type === 'queen' && draggedPiece.color === 'white' ? '♕' :
+           draggedPiece.type === 'rook' && draggedPiece.color === 'white' ? '♖' :
+           draggedPiece.type === 'bishop' && draggedPiece.color === 'white' ? '♗' :
+           draggedPiece.type === 'knight' && draggedPiece.color === 'white' ? '♘' :
+           draggedPiece.type === 'pawn' && draggedPiece.color === 'white' ? '♙' :
+           draggedPiece.type === 'king' && draggedPiece.color === 'black' ? '♚' :
+           draggedPiece.type === 'queen' && draggedPiece.color === 'black' ? '♛' :
+           draggedPiece.type === 'rook' && draggedPiece.color === 'black' ? '♜' :
+           draggedPiece.type === 'bishop' && draggedPiece.color === 'black' ? '♝' :
+           draggedPiece.type === 'knight' && draggedPiece.color === 'black' ? '♞' :
+           draggedPiece.type === 'pawn' && draggedPiece.color === 'black' ? '♟' : '?'}
         </motion.div>
       )}
     </motion.div>

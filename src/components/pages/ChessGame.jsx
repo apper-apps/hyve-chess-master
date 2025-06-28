@@ -8,6 +8,7 @@ import GameControls from '@/components/organisms/GameControls';
 import PiecePromotionModal from '@/components/molecules/PiecePromotionModal';
 import ChessService from '@/services/api/ChessService';
 import Loading from '@/components/ui/Loading';
+import { ApperIcon } from '@/components/ApperIcon';
 
 const ChessGame = () => {
   const [gameState, setGameState] = useState(null);
@@ -19,7 +20,11 @@ const ChessGame = () => {
   const [promotionMove, setPromotionMove] = useState(null);
   const [playerColor, setPlayerColor] = useState('white');
   const [difficulty, setDifficulty] = useState(3);
-
+  const [draggedPiece, setDraggedPiece] = useState(null);
+  const [draggedFrom, setDraggedFrom] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   useEffect(() => {
     initializeGame();
   }, []);
@@ -68,9 +73,8 @@ const ChessGame = () => {
       setComputerThinking(false);
     }
   };
-
-  const handleSquareClick = async (square) => {
-    if (!gameState || gameState.currentTurn !== playerColor || computerThinking) return;
+const handleSquareClick = async (square) => {
+    if (!gameState || gameState.currentTurn !== playerColor || computerThinking || dragActive) return;
 
     // If clicking on already selected square, deselect
     if (selectedSquare === square) {
@@ -108,6 +112,43 @@ const ChessGame = () => {
     }
   };
 
+  const handleDragStart = async (square) => {
+    if (!gameState || gameState.currentTurn !== playerColor || computerThinking) return false;
+    
+    const piece = gameState.board[square];
+    if (!piece || piece.color !== playerColor) return false;
+    
+    setDraggedPiece(piece);
+    setDraggedFrom(square);
+    setDragActive(true);
+    
+    const moves = await ChessService.getValidMoves(gameState, square);
+    setValidMoves(moves);
+    setSelectedSquare(square);
+    
+    return true;
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPiece(null);
+    setDraggedFrom(null);
+    setDragActive(false);
+    setSelectedSquare(null);
+    setValidMoves([]);
+  };
+
+  const handleDrop = async (square) => {
+    if (!draggedFrom || !draggedPiece) return false;
+    
+    if (validMoves.includes(square)) {
+      await makePlayerMove(draggedFrom, square);
+      handleDragEnd();
+      return true;
+    }
+    
+    handleDragEnd();
+    return false;
+  };
   const makePlayerMove = async (from, to) => {
     try {
       const piece = gameState.board[from];
@@ -196,15 +237,15 @@ const ChessGame = () => {
     return <Loading message="Setting up the chess board..." />;
   }
 
-  return (
-    <div className="max-w-7xl mx-auto space-y-6">
+return (
+    <div className="max-w-full lg:max-w-7xl mx-auto space-y-3 lg:space-y-6 px-2 lg:px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        className="space-y-4"
       >
         {/* Game Controls */}
-        <div className="lg:col-span-3">
+        <div className="w-full">
           <GameControls
             onNewGame={handleNewGame}
             playerColor={playerColor}
@@ -215,48 +256,144 @@ const ChessGame = () => {
           />
         </div>
 
-        {/* Left Panel - Captured Pieces & Game Status */}
-        <div className="space-y-4">
-          <GameStatus
-            gameState={gameState}
-            playerColor={playerColor}
-            computerThinking={computerThinking}
-          />
-          <CapturedPieces
-            capturedPieces={gameState?.capturedPieces || { white: [], black: [] }}
-          />
+        {/* Mobile Layout */}
+        <div className="block lg:hidden space-y-4">
+          {/* Mobile Status Panel */}
+          <motion.div 
+            className={`mobile-panel ${leftPanelCollapsed ? 'collapsed' : 'expanded'}`}
+            layout
+          >
+            <div 
+              className="flex items-center justify-between p-3 cursor-pointer"
+              onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+            >
+              <h3 className="font-display font-semibold text-chess-dark">Game Status</h3>
+              <ApperIcon 
+                name={leftPanelCollapsed ? "ChevronDown" : "ChevronUp"} 
+                size={20} 
+                className="text-chess-dark" 
+              />
+            </div>
+            {!leftPanelCollapsed && (
+              <div className="px-3 pb-3 space-y-3">
+                <GameStatus
+                  gameState={gameState}
+                  playerColor={playerColor}
+                  computerThinking={computerThinking}
+                />
+                <CapturedPieces
+                  capturedPieces={gameState?.capturedPieces || { white: [], black: [] }}
+                />
+              </div>
+            )}
+          </motion.div>
+
+          {/* Chess Board - Mobile */}
+          <div className="flex justify-center">
+            <ChessBoard
+              gameState={gameState}
+              selectedSquare={selectedSquare}
+              validMoves={validMoves}
+              onSquareClick={handleSquareClick}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDrop={handleDrop}
+              draggedPiece={draggedPiece}
+              draggedFrom={draggedFrom}
+              dragActive={dragActive}
+              playerColor={playerColor}
+              disabled={computerThinking || gameState?.gameStatus !== 'active'}
+            />
+          </div>
+
+          {/* Mobile Stats Panel */}
+          <motion.div 
+            className={`mobile-panel ${rightPanelCollapsed ? 'collapsed' : 'expanded'}`}
+            layout
+          >
+            <div 
+              className="flex items-center justify-between p-3 cursor-pointer"
+              onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+            >
+              <h3 className="font-display font-semibold text-chess-dark">Statistics</h3>
+              <ApperIcon 
+                name={rightPanelCollapsed ? "ChevronDown" : "ChevronUp"} 
+                size={20} 
+                className="text-chess-dark" 
+              />
+            </div>
+            {!rightPanelCollapsed && (
+              <div className="px-3 pb-3">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Move Number:</span>
+                    <span className="font-semibold">{gameState?.fullMoveNumber || 1}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Difficulty:</span>
+                    <span className="font-semibold">Level {difficulty}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Search Depth:</span>
+                    <span className="font-semibold">{difficulty} moves</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
         </div>
 
-        {/* Center - Chess Board */}
-        <div className="flex justify-center">
-          <ChessBoard
-            gameState={gameState}
-            selectedSquare={selectedSquare}
-            validMoves={validMoves}
-            onSquareClick={handleSquareClick}
-            playerColor={playerColor}
-            disabled={computerThinking || gameState?.gameStatus !== 'active'}
-          />
-        </div>
+        {/* Desktop Layout */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-6">
+          {/* Left Panel - Desktop */}
+          <div className="space-y-4">
+            <GameStatus
+              gameState={gameState}
+              playerColor={playerColor}
+              computerThinking={computerThinking}
+            />
+            <CapturedPieces
+              capturedPieces={gameState?.capturedPieces || { white: [], black: [] }}
+            />
+          </div>
 
-        {/* Right Panel - Move History & Stats */}
-        <div className="space-y-4">
-          <div className="status-card">
-            <h3 className="font-display font-semibold text-chess-dark mb-3">
-              Game Statistics
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Move Number:</span>
-                <span className="font-semibold">{gameState?.fullMoveNumber || 1}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Difficulty:</span>
-                <span className="font-semibold">Level {difficulty}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Search Depth:</span>
-                <span className="font-semibold">{difficulty} moves</span>
+          {/* Center - Chess Board Desktop */}
+          <div className="flex justify-center">
+            <ChessBoard
+              gameState={gameState}
+              selectedSquare={selectedSquare}
+              validMoves={validMoves}
+              onSquareClick={handleSquareClick}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDrop={handleDrop}
+              draggedPiece={draggedPiece}
+              draggedFrom={draggedFrom}
+              dragActive={dragActive}
+              playerColor={playerColor}
+              disabled={computerThinking || gameState?.gameStatus !== 'active'}
+            />
+          </div>
+
+          {/* Right Panel - Desktop */}
+          <div className="space-y-4">
+            <div className="status-card">
+              <h3 className="font-display font-semibold text-chess-dark mb-3">
+                Game Statistics
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Move Number:</span>
+                  <span className="font-semibold">{gameState?.fullMoveNumber || 1}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Difficulty:</span>
+                  <span className="font-semibold">Level {difficulty}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Search Depth:</span>
+                  <span className="font-semibold">{difficulty} moves</span>
+                </div>
               </div>
             </div>
           </div>
